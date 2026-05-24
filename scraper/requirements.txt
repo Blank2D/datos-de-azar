@@ -1,0 +1,29 @@
+# ============================================================
+# datos-de-azar — Python scraper dependencies
+# ============================================================
+# Python 3.11+ recomendado
+# Instalar:  pip install -r requirements.txt
+# ============================================================
+
+# HTTP y parseo HTML
+requests>=2.32.0,<3.0
+beautifulsoup4>=4.12.0,<5.0
+lxml>=5.0.0,<6.0
+
+# Base de datos (MySQL)
+SQLAlchemy>=2.0.30,<3.0
+PyMySQL>=1.1.0,<2.0
+cryptography>=42.0.0          # requerido por PyMySQL para auth nativa
+
+# Análisis estadístico (para fase 3)
+numpy>=1.26.0,<3.0
+scipy>=1.13.0,<2.0
+pandas>=2.2.0,<3.0
+
+# Utilidades
+python-dotenv>=1.0.0,<2.0     # cargar .env en dev local
+
+# Dev / testing (opcional)
+pytest>=8.0.0,<9.0
+pytest-mock>=3.12.0,<4.0
+ruff>=0.6.0,<1.0

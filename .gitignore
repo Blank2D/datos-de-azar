@@ -1,0 +1,83 @@
+# ============================================================
+# datos-de-azar — .gitignore
+# ============================================================
+
+# ---------- Node / Next.js ----------
+node_modules/
+.next/
+out/
+build/
+dist/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+
+# ---------- Variables de entorno ----------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ---------- Prisma ----------
+prisma/migrations/dev.db*
+.prisma/
+
+# ---------- IDEs ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Logs ----------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs/
+
+# ---------- Datos locales ----------
+*.sqlite
+*.sqlite3
+*.db
+data/raw/
+data/processed/
+scraper/dumps/
+
+# ---------- Docker ----------
+mysql_data/
+volumes/
+
+# ---------- Tests ----------
+coverage/
+.nyc_output/

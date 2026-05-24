@@ -1,0 +1,115 @@
+// ============================================================
+// datos-de-azar — Prisma schema
+// ============================================================
+// Genera el cliente:  npx prisma generate
+// Crear migración:    npx prisma migrate dev --name <nombre>
+// Aplicar a prod:     npx prisma migrate deploy
+// Explorar BD:        npx prisma studio
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// 🎰 Kino — Lotería de Concepción
+// 14 números del 1 al 25, sorteos Mié/Vie/Dom 22:00 CLT
+// ============================================================
+model KinoDraw {
+  id           Int      @id @default(autoincrement())
+  drawNumber   Int      @unique @map("draw_number")
+  drawDate     DateTime @map("draw_date") @db.Date
+  drawDay      KinoDay  @map("draw_day")
+  numbers      Json     // [3,7,12,15,17,19,20,21,22,23,24,25,1,8]
+  adicional    Int?
+  prizeJackpot BigInt?  @map("prize_jackpot")
+  winnersCount Int?     @map("winners_count")
+  sourceUrl    String?  @map("source_url") @db.VarChar(500)
+  scrapedAt    DateTime @default(now()) @map("scraped_at")
+
+  @@index([drawDate])
+  @@map("kino_draws")
+}
+
+// ============================================================
+// 🍀 Loto — Polla Chilena de Beneficencia
+// 6 números del 1 al 41, sorteos Mar/Jue/Dom 21:00 CLT
+// ============================================================
+model LotoDraw {
+  id           Int      @id @default(autoincrement())
+  drawNumber   Int      @unique @map("draw_number")
+  drawDate     DateTime @map("draw_date") @db.Date
+  drawDay      LotoDay  @map("draw_day")
+  numbers      Json     // [1,12,23,34,38,41]
+  revancha     Json?    // 6 números adicionales (opcional)
+  desquite     Json?    // 6 números adicionales (opcional)
+  prizeJackpot BigInt?  @map("prize_jackpot")
+  winnersCount Int?     @map("winners_count")
+  sourceUrl    String?  @map("source_url") @db.VarChar(500)
+  scrapedAt    DateTime @default(now()) @map("scraped_at")
+
+  @@index([drawDate])
+  @@map("loto_draws")
+}
+
+// ============================================================
+// 📊 Cache de estadísticas pre-computadas
+// Los análisis Python escriben aquí, las API routes leen.
+// ============================================================
+model StatisticsCache {
+  id         Int      @id @default(autoincrement())
+  game       Game
+  statType   String   @map("stat_type") @db.VarChar(100)
+  timeWindow String   @default("all") @map("time_window") @db.VarChar(50)
+  data       Json
+  computedAt DateTime @default(now()) @updatedAt @map("computed_at")
+
+  @@unique([game, statType, timeWindow])
+  @@map("statistics_cache")
+}
+
+// ============================================================
+// 🪵 Log de ejecuciones del scraper
+// ============================================================
+model ScraperLog {
+  id         Int           @id @default(autoincrement())
+  game       Game
+  status     ScraperStatus
+  drawsFound Int           @default(0) @map("draws_found")
+  message    String?       @db.Text
+  runAt      DateTime      @default(now()) @map("run_at")
+
+  @@index([runAt])
+  @@map("scraper_logs")
+}
+
+// ============================================================
+// Enums
+// ============================================================
+enum KinoDay {
+  wednesday
+  friday
+  sunday
+}
+
+enum LotoDay {
+  tuesday
+  thursday
+  sunday
+}
+
+enum Game {
+  kino
+  loto
+}
+
+enum ScraperStatus {
+  success
+  error
+  no_new_data
+}

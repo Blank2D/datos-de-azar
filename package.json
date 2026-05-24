@@ -1,0 +1,43 @@
+{
+  "name": "datos-de-azar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Análisis estadístico open-source de los sorteos históricos de Kino y Loto en Chile",
+  "author": "Cristóbal <munrralo1@gmail.com> (https://github.com/Blank2D)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blank2D/datos-de-azar.git"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down",
+    "db:logs": "docker-compose logs -f mysql",
+    "db:reset": "docker-compose down -v && docker-compose up -d",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:format": "prisma format"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "prisma": "^5.22.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

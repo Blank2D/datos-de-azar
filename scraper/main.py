@@ -2,14 +2,17 @@
 Punto de entrada del scraper.
 
 Uso:
-    python main.py --game kino --mode latest
-    python main.py --game loto --mode latest
-    python main.py --game kino --mode historic --from 2900 --to 2999
-    python main.py --game kino --mode latest --dry-run
+    python -m scraper.main --game kino --mode latest
+    python -m scraper.main --game loto --mode latest
+    python -m scraper.main --game kino --mode historic --from 2900 --to 2999
+    python -m scraper.main --game kino --mode latest --dry-run
+    python -m scraper.main --game kino --mode latest --skip-analyze
+    python -m scraper.main --game kino --mode analyze        # solo recomputa stats
+    python -m scraper.main --game loto --mode analyze
 
 Códigos de salida:
     0  — OK (incluye 'no_new_data')
-    1  — Error de scraping o validación
+    1  — Error de scraping, análisis o validación
     2  — Argumentos inválidos
 """
 from __future__ import annotations
@@ -22,6 +25,7 @@ from typing import Optional
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+from .analysis import run_analysis_pipeline
 from .config import configure_logging, load_settings
 from .models import (
     Game,
@@ -143,7 +147,7 @@ def log_scraper_run(
 # ============================================================
 # Comandos
 # ============================================================
-def run_kino_latest(*, dry_run: bool) -> int:
+def run_kino_latest(*, dry_run: bool, skip_analyze: bool = False) -> int:
     settings = load_settings()
     scraper = KinoScraper(
         delay_seconds=settings.request_delay_seconds,
@@ -160,10 +164,13 @@ def run_kino_latest(*, dry_run: bool) -> int:
     inserted = persist_kino(draw, dry_run=dry_run)
     status = ScraperStatus.success if inserted else ScraperStatus.no_new_data
     log_scraper_run(Game.kino, status, 1 if inserted else 0, None, dry_run=dry_run)
+
+    if inserted and not skip_analyze:
+        _safe_trigger_analysis("kino", dry_run=dry_run)
     return 0
 
 
-def run_loto_latest(*, dry_run: bool) -> int:
+def run_loto_latest(*, dry_run: bool, skip_analyze: bool = False) -> int:
     settings = load_settings()
     scraper = LotoScraper(
         delay_seconds=settings.request_delay_seconds,
@@ -180,6 +187,44 @@ def run_loto_latest(*, dry_run: bool) -> int:
     inserted = persist_loto(draw, dry_run=dry_run)
     status = ScraperStatus.success if inserted else ScraperStatus.no_new_data
     log_scraper_run(Game.loto, status, 1 if inserted else 0, None, dry_run=dry_run)
+
+    if inserted and not skip_analyze:
+        _safe_trigger_analysis("loto", dry_run=dry_run)
+    return 0
+
+
+def _safe_trigger_analysis(game: str, *, dry_run: bool) -> None:
+    """
+    Tras un insert exitoso, refrescamos el statistics_cache. Errores en el
+    análisis NO deben hacer fallar el scraper (los datos ya están en BD).
+    """
+    try:
+        result = run_analysis_pipeline(game, dry_run=dry_run)  # type: ignore[arg-type]
+        logger.info(
+            "Análisis %s post-insert: %d entries escritas, %d skipped",
+            game,
+            result.entries_written,
+            result.skipped,
+        )
+    except Exception as exc:
+        logger.warning("Análisis post-insert de %s falló (no crítico): %s", game, exc)
+
+
+def run_analyze(game: str, *, dry_run: bool) -> int:
+    """Modo standalone — recomputa todas las stats sin scrapear."""
+    try:
+        result = run_analysis_pipeline(game, dry_run=dry_run)  # type: ignore[arg-type]
+    except Exception as exc:
+        logger.error("Pipeline de análisis %s falló: %s", game, exc)
+        return 1
+
+    logger.info(
+        "Pipeline %s: total_draws=%d, entries=%d, skipped=%d",
+        game,
+        result.total_draws,
+        result.entries_written,
+        result.skipped,
+    )
     return 0
 
 
@@ -218,8 +263,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["latest", "historic"],
-        help="latest: último sorteo / historic: rango por número de sorteo",
+        choices=["latest", "historic", "analyze"],
+        help=(
+            "latest: último sorteo / historic: rango por número de sorteo / "
+            "analyze: recomputa statistics_cache sin scrapear"
+        ),
     )
     parser.add_argument("--from", dest="start", type=int, help="Sorteo inicial (modo historic)")
     parser.add_argument("--to", dest="end", type=int, help="Sorteo final (modo historic)")
@@ -227,6 +275,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="No escribe a la BD; solo loggea lo que haría",
+    )
+    parser.add_argument(
+        "--skip-analyze",
+        action="store_true",
+        help="En modo latest: no recomputar statistics_cache tras un insert",
     )
     return parser
 
@@ -241,8 +294,11 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if args.mode == "latest":
         if args.game == "kino":
-            return run_kino_latest(dry_run=dry_run)
-        return run_loto_latest(dry_run=dry_run)
+            return run_kino_latest(dry_run=dry_run, skip_analyze=args.skip_analyze)
+        return run_loto_latest(dry_run=dry_run, skip_analyze=args.skip_analyze)
+
+    if args.mode == "analyze":
+        return run_analyze(args.game, dry_run=dry_run)
 
     # mode == "historic"
     if args.start is None or args.end is None:

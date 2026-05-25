@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   CSS variables — fuente de verdad para los colores de marca.
+   Mantener sincronizado con tailwind.config.ts.
+   ============================================================ */
+:root {
+  /* ---- Sitio (dark mode siempre) ---- */
+  --bg-primary:    #0D0F1A;
+  --bg-card:       #13151F;
+  --bg-elevated:   #1A1D2E;
+  --border:        #2A2D3E;
+
+  --text-primary:  #F0F2FF;
+  --text-secondary:#9CA3AF;
+  --text-muted:    #6B7280;
+
+  /* ---- 🎰 Kino ---- */
+  --kino-primary:  #FF0008;
+  --kino-dark:     #AB0000;
+  --kino-orange:   #FF8204;
+  --kino-blue:     #007BDB;
+  --kino-gradient: linear-gradient(135deg, #AB0000 0%, #FF0008 100%);
+
+  /* ---- 🍀 Loto ---- */
+  --loto-primary:  #DD1923;
+  --loto-yellow:   #FFCA00;
+  --loto-green:    #006C21;
+  --loto-gradient: linear-gradient(135deg, #A01218 0%, #DD1923 100%);
+
+  /* ---- UI compartidos ---- */
+  --accent-blue:   #007BDB;
+  --success:       #22C55E;
+  --warning:       #F59E0B;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Scrollbar dark mode */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-elevated);
+}
+
+/* Selección de texto en colores de marca */
+::selection {
+  background-color: rgba(255, 0, 8, 0.25);
+  color: var(--text-primary);
+}

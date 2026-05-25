@@ -22,6 +22,9 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # Init scripts ejecutados automaticamente la PRIMERA vez que se
+      # inicializa el volumen mysql_data (ver db/init/01-grants.sql).
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     command:
       - --default-authentication-plugin=mysql_native_password
       - --character-set-server=utf8mb4
